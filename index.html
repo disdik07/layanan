@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Layanan Terpadu</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* --- Professional UI Revamp --- */
+        :root {
+            --primary-color: #0052CC; /* A professional blue */
+            --primary-hover: #0041A3;
+            --secondary-color: #F4F5F7; /* Light gray background */
+            --text-primary: #172B4D; /* Dark blue for text */
+            --text-secondary: #5E6C84;
+            --card-bg: #FFFFFF;
+            --shadow-color: rgba(9, 30, 66, 0.15);
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-primary);
+        }
+
+        /* --- Main Layout --- */
+        .main-container {
+            max-width: 1200px;
+        }
+
+        .page-header {
+            border-bottom: 1px solid #DFE1E6;
+            padding-bottom: 1.5rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* --- View Toggle Buttons --- */
+        .view-toggle .btn {
+            background-color: var(--card-bg);
+            border: 1px solid #DFE1E6;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .view-toggle .btn.active,
+        .view-toggle .btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* --- Desktop Admin Buttons --- */
+        .desktop-admin-controls .btn {
+            background-color: var(--card-bg);
+            border: 1px solid #DFE1E6;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .desktop-admin-controls .btn:hover {
+            background-color: var(--secondary-color);
+            border-color: #C1C7D0;
+        }
+        .desktop-admin-controls .btn-add {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .desktop-admin-controls .btn-add:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+
+        /* --- Service Card Redesign --- */
+        .service-card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid transparent;
+            box-shadow: 0 1px 3px var(--shadow-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 12px var(--shadow-color);
+            border-color: var(--primary-color);
+        }
+        
+        /* --- Smooth Page Transition --- */
+        #grid-view {
+            position: relative;
+            overflow-x: hidden; /* Hide the content sliding out */
+        }
+        #service-container {
+            transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+        }
+
+        /* States for animation */
+        .page-transition-out-next {
+            transform: translateX(-40px);
+            opacity: 0;
+        }
+        .page-transition-out-prev {
+            transform: translateX(40px);
+            opacity: 0;
+        }
+
+        .page-transition-in-next {
+            transform: translateX(40px);
+            opacity: 0;
+        }
+        .page-transition-in-prev {
+            transform: translateX(-40px);
+            opacity: 0;
+        }
+        
+        /* --- Disabled State for Cards --- */
+        .disabled-view .service-card {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(80%);
+            cursor: not-allowed;
+        }
+         .disabled-view .service-card:hover {
+            transform: none;
+            box-shadow: 0 1px 3px var(--shadow-color);
+            border-color: transparent;
+        }
+
+
+        .service-card-content { 
+            text-decoration: none; 
+            color: inherit;
+            flex-grow: 1;
+        }
+        
+        /* --- Grid View Card --- */
+        #service-container:not(.view-list) .service-card-content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .icon-container {
+            width: 64px; 
+            height: 64px; 
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+            transition: transform 0.3s ease;
+        }
+        .service-card:hover .icon-container {
+            transform: scale(1.1);
+        }
+        .icon-container i { 
+            font-size: 2rem; 
+            color: white; 
+        }
+        .service-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .service-card-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* --- List View Card --- */
+        .view-list .service-card {
+            margin-bottom: 1rem;
+        }
+        .view-list .service-card-content {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            gap: 1.5rem;
+        }
+        .view-list .icon-container {
+            width: 50px;
+            height: 50px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .view-list .card-text-content {
+            text-align: left;
+        }
+        .view-list .service-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Description Truncation & Read More */
+        .desc-truncated {
+            max-height: 3em; /* Approx 2 lines */
+            overflow: hidden;
+        }
+        .read-more {
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        /* Admin Controls */
+        .admin-controls {
+            position: absolute; top: 12px; right: 12px;
+            display: none; gap: 8px;
+            z-index: 10;
+        }
+        .admin-view .admin-controls { display: flex; }
+        .admin-btn {
+            background-color: rgba(0, 0, 0, 0.5); color: white; border: none;
+            border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background-color 0.2s;
+            font-size: 0.8rem;
+        }
+        .admin-btn:hover { background-color: rgba(0, 0, 0, 0.7); }
+
+        /* --- States (Loading, Empty) --- */
+        #empty-state, #loading-state {
+            text-align: center; 
+            padding: 5rem 1rem; 
+            border: 2px dashed #DFE1E6;
+            border-radius: var(--border-radius); 
+            background-color: var(--card-bg);
+            margin-top: 2rem;
+        }
+
+        /* --- Iframe View --- */
+        #iframe-view {
+            display: none; /* Default hidden */
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--card-bg);
+        }
+        #iframe-header {
+            padding: 1rem 1.5rem;
+            flex-shrink: 0;
+            border-bottom: 1px solid #DFE1E6;
+        }
+        #iframe-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        #service-iframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+        }
+        #back-to-grid-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        #back-to-grid-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* --- Pagination --- */
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 4px;
+            border: 1px solid #DFE1E6;
+            color: var(--text-secondary);
+            background-color: var(--card-bg);
+            font-weight: 500;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0, 82, 204, 0.3);
+        }
+        .pagination .page-item:not(.disabled) .page-link:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .pagination .page-item.disabled .page-link {
+            background-color: var(--secondary-color);
+            color: #A5ADBA;
+        }
+
+        /* --- Responsive Navigation --- */
+        .bottom-nav {
+            display: none; 
+        }
+        .desktop-nav {
+            display: flex;
+        }
+        @media (max-width: 768px) {
+            .bottom-nav { 
+                display: flex; 
+                position: fixed; bottom: 0; left: 0; right: 0;
+                background-color: var(--card-bg); 
+                box-shadow: 0 -2px 10px rgba(9, 30, 66, 0.08); 
+                z-index: 1000;
+                transition: transform 0.3s ease-in-out;
+                border-top: 1px solid #DFE1E6;
+                justify-content: space-around; 
+                padding: 0.5rem 0;
+            }
+            .desktop-nav { display: none; }
+            main { padding-bottom: 100px; }
+        }
+        .bottom-nav.hidden-nav { transform: translateY(100%); }
+        .nav-item-mobile {
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-secondary); 
+            font-size: 0.7rem; 
+            text-decoration: none;
+            padding: 4px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        .nav-item-mobile:hover {
+            background-color: var(--secondary-color);
+        }
+        .nav-item-mobile i { font-size: 1.25rem; margin-bottom: 4px; }
+
+        /* --- Modals --- */
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+        }
+        .modal-header {
+            border-bottom: 1px solid #DFE1E6;
+            padding: 1.5rem;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .modal-footer {
+            border-top: 1px solid #DFE1E6;
+            padding: 1rem 1.5rem;
+        }
+        .form-control, .form-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #DFE1E6;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Main Content -->
+    <main class="container main-container mx-auto p-4 md:p-6">
+        <!-- Service Grid View -->
+        <div id="grid-view">
+            <!-- Page Header -->
+            <div class="flex justify-between items-center mb-6 page-header">
+                <div>
+                    <h1 class="page-title">Portal Layanan</h1>
+                    <p class="text-secondary mt-1">Akses semua layanan digital di satu tempat.</p>
+                    <p id="service-count" class="text-sm text-secondary mt-2"></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="inline-flex rounded-md shadow-sm view-toggle" role="group">
+                        <button type="button" id="grid-view-btn" class="btn active rounded-r-none">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button type="button" id="list-view-btn" class="btn rounded-l-none">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                    <!-- Desktop Admin Controls -->
+                    <div class="desktop-nav desktop-admin-controls">
+                         <button id="login-btn-desktop" class="btn" data-bs-toggle="modal" data-bs-target="#loginModal">
+                             <i class="fas fa-sign-in-alt me-2"></i>Login
+                         </button>
+                         <button id="admin-panel-btn-desktop" class="btn btn-add hidden" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                             <i class="fas fa-plus me-2"></i>Tambah Layanan
+                         </button>
+                         <button id="logout-btn-desktop" class="btn hidden">
+                             <i class="fas fa-sign-out-alt me-2"></i>Logout
+                         </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search and Sort Controls -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+                <div class="relative flex-grow">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </span>
+                    <input type="search" id="search-input" placeholder="Cari layanan..." class="form-control w-full pl-10">
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="inline-flex rounded-md shadow-sm view-toggle" role="group">
+                        <button type="button" id="sort-az-btn" class="btn rounded-r-none active" title="Urutkan A-Z">
+                            <i class="fas fa-sort-alpha-down"></i> A-Z
+                        </button>
+                        <button type="button" id="sort-za-btn" class="btn rounded-l-none" title="Urutkan Z-A">
+                            <i class="fas fa-sort-alpha-up"></i> Z-A
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="service-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            <div id="pagination-container" class="mt-8 flex justify-center"></div>
+
+            <div id="loading-state" class="hidden">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"><span class="visually-hidden">Loading...</span></div>
+                <p class="mt-4 text-lg text-gray-600">Memuat data layanan...</p>
+            </div>
+            <div id="empty-state" class="hidden">
+                <i class="fas fa-box-open fa-4x text-gray-400 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-700">Belum Ada Layanan</h3>
+                <p class="text-gray-500 mt-2">Login sebagai admin untuk menambahkan layanan baru.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer id="main-footer" class="text-center py-4">
+        <a href="https://www.tiktok.com/@armadayogi" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-primary-color transition-colors">
+            createdby@armadayogie
+        </a>
+    </footer>
+    
+    <!-- Iframe View (Hidden by default) -->
+    <div id="iframe-view">
+        <div id="iframe-header" class="flex justify-between items-center">
+            <h2 id="iframe-title"></h2>
+            <button id="back-to-grid-btn" class="btn btn-primary flex items-center justify-center rounded-full w-12 h-12" title="Kembali ke Portal">
+                <i class="fas fa-times fa-lg"></i>
+            </button>
+        </div>
+        <iframe id="service-iframe" src="about:blank" title="Service Content"></iframe>
+    </div>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="bottom-nav">
+        <a href="#" id="home-btn-mobile" class="nav-item-mobile"><i class="fas fa-home"></i><span>Beranda</span></a>
+        <a href="#" id="login-btn-mobile" class="nav-item-mobile" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fas fa-sign-in-alt"></i><span>Login</span></a>
+        <a href="#" id="admin-panel-btn-mobile" class="nav-item-mobile hidden" data-bs-toggle="modal" data-bs-target="#addServiceModal"><i class="fas fa-plus-circle"></i><span>Tambah</span></a>
+        <a href="#" id="logout-btn-mobile" class="nav-item-mobile hidden"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+    </nav>
+
+    <!-- Modals -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title text-2xl font-bold">Login</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="login-form"><div class="mb-4"><label for="username" class="form-label font-semibold">Email</label><input type="email" class="form-control" id="username" required></div><div class="mb-4"><label for="password" class="form-label font-semibold">Password</label><input type="password" class="form-control" id="password" required></div><div id="login-error" class="alert alert-danger hidden" role="alert">Email atau password salah!</div><button type="submit" class="w-100 btn btn-primary btn-lg mt-3">Login</button></form></div></div></div></div>
+    <div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title text-2xl font-bold">Tambah Layanan Baru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="add-service-form"><div class="mb-3"><label for="add-service-title" class="form-label font-semibold">Nama Layanan</label><input type="text" class="form-control" id="add-service-title" required></div><div class="mb-3"><label for="add-service-desc" class="form-label font-semibold">Deskripsi Singkat</label><input type="text" class="form-control" id="add-service-desc" required></div><div class="mb-3"><label for="add-service-icon" class="form-label font-semibold">Pilih Ikon</label><select id="add-service-icon" class="form-select"></select></div><div class="mb-3"><label for="add-service-url" class="form-label font-semibold">URL Tautan</label><input type="url" class="form-control" id="add-service-url" required></div><div class="mb-3"><label for="add-service-color" class="form-label font-semibold">Warna Latar</label><select id="add-service-color" class="form-select"><option value="bg-blue-500">Biru</option><option value="bg-indigo-500">Indigo</option><option value="bg-purple-500">Ungu</option><option value="bg-pink-500">Pink</option><option value="bg-red-500">Merah</option><option value="bg-orange-500">Oranye</option><option value="bg-yellow-500">Kuning</option><option value="bg-green-500">Hijau</option><option value="bg-teal-500">Teal</option><option value="bg-cyan-500">Cyan</option></select></div><button type="submit" class="w-100 btn btn-success btn-lg mt-3">Simpan Layanan</button></form></div></div></div></div>
+    <div class="modal fade" id="editServiceModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title text-2xl font-bold">Edit Layanan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="edit-service-form"><input type="hidden" id="edit-service-id"><div class="mb-3"><label for="edit-service-title" class="form-label font-semibold">Nama Layanan</label><input type="text" class="form-control" id="edit-service-title" required></div><div class="mb-3"><label for="edit-service-desc" class="form-label font-semibold">Deskripsi Singkat</label><input type="text" class="form-control" id="edit-service-desc" required></div><div class="mb-3"><label for="edit-service-icon" class="form-label font-semibold">Pilih Ikon</label><select id="edit-service-icon" class="form-select"></select></div><div class="mb-3"><label for="edit-service-url" class="form-label font-semibold">URL Tautan</label><input type="url" class="form-control" id="edit-service-url" required></div><div class="mb-3"><label for="edit-service-color" class="form-label font-semibold">Warna Latar</label><select id="edit-service-color" class="form-select"><option value="bg-blue-500">Biru</option><option value="bg-indigo-500">Indigo</option><option value="bg-purple-500">Ungu</option><option value="bg-pink-500">Pink</option><option value="bg-red-500">Merah</option><option value="bg-orange-500">Oranye</option><option value="bg-yellow-500">Kuning</option><option value="bg-green-500">Hijau</option><option value="bg-teal-500">Teal</option><option value="bg-cyan-500">Cyan</option></select></div><button type="submit" class="w-100 btn btn-primary btn-lg mt-3">Update Layanan</button></form></div></div></div></div>
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title text-xl font-bold">Konfirmasi Hapus</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Apakah Anda yakin ingin menghapus layanan ini?</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="button" class="btn btn-danger" id="confirm-delete-btn">Ya, Hapus</button></div></div></div></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Simple Security Deterrents (Not foolproof) ---
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            document.addEventListener('keydown', event => {
+                // Disable F12
+                if (event.keyCode === 123) {
+                    event.preventDefault();
+                }
+                // Disable Ctrl+Shift+I
+                if (event.ctrlKey && event.shiftKey && event.key === 'I') {
+                    event.preventDefault();
+                }
+                // Disable Ctrl+Shift+J
+                if (event.ctrlKey && event.shiftKey && event.key === 'J') {
+                    event.preventDefault();
+                }
+                // Disable Ctrl+U
+                if (event.ctrlKey && event.key === 'u') {
+                    event.preventDefault();
+                }
+            });
+
+            // --- SUPABASE SETUP ---
+            const SUPABASE_URL = 'https://pilxxbybxoknnpjgrnqv.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpbHh4YnlieG9rbm5wamdybnF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MzgzODEsImV4cCI6MjA3NjAxNDM4MX0.9qaZygD_YP6AQWZQ5tHgYsNke508trZsiK5BgPvNo9w';
+            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // --- CONFIGURATION ---
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoBTMqM1E0MOczWt-H90gZd0lriMiPwbWx8XWO7JNNYlO3I9i3KOFsxg-4ebmehCuk/exec'; 
+
+            // --- DOM Elements & Modals ---
+            const mainContent = document.querySelector('main');
+            const mainFooter = document.getElementById('main-footer');
+            const bottomNav = document.querySelector('.bottom-nav');
+            const gridView = document.getElementById('grid-view');
+            const iframeView = document.getElementById('iframe-view');
+            const iframeTitle = document.getElementById('iframe-title');
+            const serviceIframe = document.getElementById('service-iframe');
+            const backToGridBtn = document.getElementById('back-to-grid-btn');
+            const homeBtnMobile = document.getElementById('home-btn-mobile');
+            const gridViewBtn = document.getElementById('grid-view-btn');
+            const listViewBtn = document.getElementById('list-view-btn');
+            const paginationContainer = document.getElementById('pagination-container');
+            const searchInput = document.getElementById('search-input');
+            const sortAzBtn = document.getElementById('sort-az-btn');
+            const sortZaBtn = document.getElementById('sort-za-btn');
+            const serviceCountElement = document.getElementById('service-count');
+
+            const serviceContainer = document.getElementById('service-container');
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const loginForm = document.getElementById('login-form');
+            const addServiceForm = document.getElementById('add-service-form');
+            const editServiceForm = document.getElementById('edit-service-form');
+            const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+            const loginError = document.getElementById('login-error');
+
+            const loginBtnDesktop = document.getElementById('login-btn-desktop');
+            const adminPanelBtnDesktop = document.getElementById('admin-panel-btn-desktop');
+            const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
+            const loginBtnMobile = document.getElementById('login-btn-mobile');
+            const adminPanelBtnMobile = document.getElementById('admin-panel-btn-mobile');
+            const logoutBtnMobile = document.getElementById('logout-btn-mobile');
+            
+            const loginModal = new bootstrap.Modal('#loginModal');
+            const addServiceModal = new bootstrap.Modal('#addServiceModal');
+            const editServiceModal = new bootstrap.Modal('#editServiceModal');
+            const deleteConfirmModal = new bootstrap.Modal('#deleteConfirmModal');
+
+            // --- State Management ---
+            let services = [];
+            let serviceIdToDelete = null;
+            let currentPage = 1;
+            const itemsPerPage = 8;
+            let lastScrollTop = 0;
+            let searchTerm = '';
+            let sortOrder = 'az'; // 'az' or 'za'
+            let touchStartX = 0;
+            let touchEndX = 0;
+            let totalPages = 1;
+
+            // --- Icon Options ---
+            const icons = [
+                { value: 'fas fa-school', text: 'Pendidikan - Sekolah' },
+                { value: 'fas fa-user-graduate', text: 'Pendidikan - Lulusan' },
+                { value: 'fas fa-book-open-reader', text: 'Pendidikan - Buku' },
+                { value: 'fas fa-chalkboard-user', text: 'Pendidikan - Guru' },
+                { value: 'fas fa-microscope', text: 'Pendidikan - Sains' },
+                { value: 'fas fa-flask', text: 'Pendidikan - Kimia' },
+                { value: 'fas fa-atom', text: 'Pendidikan - Fisika' },
+                { value: 'fas fa-heartbeat', text: 'Kesehatan - Jantung' },
+                { value: 'fas fa-stethoscope', text: 'Kesehatan - Stetoskop' },
+                { value: 'fas fa-hospital', text: 'Kesehatan - Rumah Sakit' },
+                { value: 'fas fa-pills', text: 'Kesehatan - Obat' },
+                { value: 'fas fa-dna', text: 'Kesehatan - DNA' },
+                { value: 'fas fa-gamepad', text: 'Game - Gamepad' },
+                { value: 'fas fa-ghost', text: 'Game - Hantu' },
+                { value: 'fas fa-chess-knight', text: 'Game - Catur' },
+                { value: 'fas fa-rocket', text: 'Game - Roket' },
+                { value: 'fas fa-brain', text: 'Sistem - Pakar' },
+                { value: 'fas fa-cogs', text: 'Sistem - Pengaturan' },
+                { value: 'fas fa-sitemap', text: 'Sistem - Keputusan' },
+                { value: 'fas fa-database', text: 'Sistem - Database' },
+                { value: 'fas fa-server', text: 'Sistem - Server' },
+                { value: 'fas fa-laptop-code', text: 'Sistem - Kode' },
+                { value: 'fas fa-info-circle', text: 'Umum - Informasi' },
+                { value: 'fas fa-file-signature', text: 'Umum - Pendaftaran' },
+                { value: 'fas fa-bullhorn', text: 'Umum - Pengumuman' },
+                { value: 'fas fa-calendar-days', text: 'Umum - Jadwal' },
+                { value: 'fas fa-chart-simple', text: 'Umum - Statistik' },
+                { value: 'fas fa-comments', text: 'Umum - Forum' },
+                { value: 'fas fa-envelope', text: 'Umum - Pesan' },
+                { value: 'fas fa-users', text: 'Umum - Pengguna' },
+                { value: 'fas fa-building-columns', text: 'Umum - Institusi' },
+                { value: 'fas fa-briefcase', text: 'Umum - Pekerjaan' },
+            ];
+            
+            // --- FUNCTIONS ---
+
+            const slideTransition = (updateAction, direction) => {
+                const outClass = direction === 'next' ? 'page-transition-out-next' : 'page-transition-out-prev';
+                const inClass = direction === 'next' ? 'page-transition-in-next' : 'page-transition-in-prev';
+                serviceContainer.classList.add(outClass);
+                setTimeout(() => {
+                    updateAction();
+                    serviceContainer.classList.remove(outClass);
+                    serviceContainer.classList.add(inClass);
+                    setTimeout(() => {
+                        serviceContainer.classList.remove(inClass);
+                    }, 20);
+                }, 250);
+            };
+
+            const handleSwipe = () => {
+                const swipeThreshold = 50;
+                if (touchEndX < touchStartX && (touchStartX - touchEndX) > swipeThreshold) {
+                    if (currentPage < totalPages) {
+                        slideTransition(() => {
+                            currentPage++;
+                            renderServices();
+                        }, 'next');
+                    }
+                }
+                if (touchEndX > touchStartX && (touchEndX - touchStartX) > swipeThreshold) {
+                     if (currentPage > 1) {
+                        slideTransition(() => {
+                            currentPage--;
+                            renderServices();
+                        }, 'prev');
+                    }
+                }
+            };
+
+            const populateIconSelectors = () => {
+                const addIconSelect = document.getElementById('add-service-icon');
+                const editIconSelect = document.getElementById('edit-service-icon');
+                addIconSelect.innerHTML = '';
+                editIconSelect.innerHTML = '';
+                icons.forEach(icon => {
+                    const option = `<option value="${icon.value}">${icon.text}</option>`;
+                    addIconSelect.innerHTML += option;
+                    editIconSelect.innerHTML += option;
+                });
+            };
+            
+            const showLoading = (isLoading) => {
+                loadingState.classList.toggle('hidden', !isLoading);
+                serviceContainer.classList.toggle('hidden', isLoading);
+                paginationContainer.classList.toggle('hidden', isLoading);
+            };
+
+            const renderPagination = (totalItems) => {
+                totalPages = Math.ceil(totalItems / itemsPerPage);
+                paginationContainer.innerHTML = '';
+
+                if (totalPages <= 1) return;
+
+                let paginationHTML = '<ul class="pagination">';
+                
+                paginationHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a></li>`;
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                }
+                paginationHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a></li>`;
+                
+                paginationHTML += '</ul>';
+                paginationContainer.innerHTML = paginationHTML;
+
+                document.querySelectorAll('.pagination .page-link').forEach(link => {
+                    link.addEventListener('click', e => {
+                        e.preventDefault();
+                        const page = parseInt(e.currentTarget.dataset.page);
+                        if (page && page !== currentPage) {
+                           const direction = page > currentPage ? 'next' : 'prev';
+                           slideTransition(() => {
+                                currentPage = page;
+                                renderServices();
+                           }, direction);
+                        }
+                    });
+                });
+            };
+
+            const renderServices = () => {
+                serviceContainer.innerHTML = '';
+                
+                let filteredServices = [...services];
+
+                if (searchTerm) {
+                    filteredServices = filteredServices.filter(service => 
+                        service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                    );
+                }
+
+                let countText = `Menampilkan ${filteredServices.length} dari ${services.length} layanan.`;
+                if (searchTerm) {
+                    countText = `Menemukan ${filteredServices.length} layanan untuk "${searchTerm}".`;
+                }
+                serviceCountElement.textContent = countText;
+
+                filteredServices.sort((a, b) => {
+                    if (sortOrder === 'az') {
+                        return a.title.localeCompare(b.title);
+                    } else {
+                        return b.title.localeCompare(a.title);
+                    }
+                });
+                
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
+                if (paginatedServices.length === 0) {
+                    const emptyMessage = (searchTerm)
+                        ? `<i class="fas fa-search fa-4x text-gray-400 mb-4"></i><h3 class="text-xl font-semibold text-gray-700">Tidak Ditemukan</h3><p class="text-gray-500 mt-2">Tidak ada layanan yang cocok dengan pencarian Anda.</p>`
+                        : `<i class="fas fa-box-open fa-4x text-gray-400 mb-4"></i><h3 class="text-xl font-semibold text-gray-700">Belum Ada Layanan</h3><p class="text-gray-500 mt-2">Login sebagai admin untuk menambahkan layanan baru.</p>`;
+                    emptyState.innerHTML = emptyMessage;
+                    emptyState.classList.remove('hidden');
+                    paginationContainer.classList.add('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    paginationContainer.classList.remove('hidden');
+                    paginatedServices.forEach(service => {
+                        const isLongDesc = service.description && service.description.length > 50;
+                        const card = document.createElement('div');
+                        card.className = 'service-card';
+                        
+                        const gridHTML = `
+                            <div class="admin-controls">
+                                <button class="admin-btn edit-btn" data-id="${service.id}"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="admin-btn delete-btn" data-id="${service.id}"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                            <div class="service-card-content" data-url="${service.url}" data-title="${service.title}">
+                                <div class="icon-container ${service.color}"><i class="${service.icon}"></i></div>
+                                <h3 class="service-card-title">${service.title}</h3>
+                                <p class="service-card-desc ${isLongDesc ? 'desc-truncated' : ''}">${service.description || ''}</p>
+                                ${isLongDesc ? '<span class="read-more">Baca Selengkapnya</span>' : ''}
+                            </div>`;
+
+                        const listHTML = `
+                                <div class="admin-controls">
+                                    <button class="admin-btn edit-btn" data-id="${service.id}"><i class="fas fa-pencil-alt"></i></button>
+                                    <button class="admin-btn delete-btn" data-id="${service.id}"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                                <div class="service-card-content" data-url="${service.url}" data-title="${service.title}">
+                                    <div class="icon-container ${service.color}"><i class="${service.icon}"></i></div>
+                                    <div class="card-text-content flex-grow">
+                                        <h3 class="service-card-title">${service.title}</h3>
+                                        <p class="service-card-desc ${isLongDesc ? 'desc-truncated' : ''}">${service.description || ''}</p>
+                                        ${isLongDesc ? '<span class="read-more">Baca Selengkapnya</span>' : ''}
+                                    </div>
+                                </div>`;
+                        
+                        card.innerHTML = serviceContainer.classList.contains('view-list') ? listHTML : gridHTML;
+                        serviceContainer.appendChild(card);
+                    });
+                }
+                document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
+                document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
+                document.querySelectorAll('.service-card-content').forEach(card => card.addEventListener('click', handleServiceClick));
+                document.querySelectorAll('.read-more').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const desc = e.target.previousElementSibling;
+                        desc.classList.toggle('desc-truncated');
+                        e.target.textContent = desc.classList.contains('desc-truncated') ? 'Baca Selengkapnya' : 'Sembunyikan';
+                    });
+                });
+
+                renderPagination(filteredServices.length);
+            };
+            
+            const setView = (view) => {
+                currentPage = 1;
+                if (view === 'list') {
+                    serviceContainer.className = 'view-list';
+                    listViewBtn.classList.add('active');
+                    gridViewBtn.classList.remove('active');
+                } else {
+                    serviceContainer.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6';
+                    gridViewBtn.classList.add('active');
+                    listViewBtn.classList.remove('active');
+                }
+                slideTransition(renderServices, 'next');
+            };
+            
+            const showIframeView = (url, title) => {
+                mainContent.style.display = 'none';
+                mainFooter.style.display = 'none';
+                bottomNav.style.display = 'none';
+                iframeView.style.display = 'flex';
+                iframeTitle.textContent = title;
+                serviceIframe.src = url;
+            };
+
+            const showGridView = () => {
+                mainContent.style.display = 'block';
+                mainFooter.style.display = 'block';
+                if (window.innerWidth <= 768) {
+                    bottomNav.style.display = 'flex';
+                }
+                iframeView.style.display = 'none';
+                serviceIframe.src = 'about:blank';
+            };
+            
+            const handleServiceClick = (e) => {
+                const url = e.currentTarget.dataset.url;
+                const title = e.currentTarget.dataset.title;
+                showIframeView(url, title);
+            };
+            
+            const updateUIAfterLogin = (role) => {
+                const isLoggedIn = role === 'admin' || role === 'user';
+                const isAdmin = role === 'admin';
+
+                // Desktop
+                loginBtnDesktop.classList.toggle('hidden', isLoggedIn);
+                logoutBtnDesktop.classList.toggle('hidden', !isLoggedIn);
+                adminPanelBtnDesktop.classList.toggle('hidden', !isAdmin); // Only show for admin
+
+                // Mobile
+                loginBtnMobile.classList.toggle('hidden', isLoggedIn);
+                logoutBtnMobile.classList.toggle('hidden', !isLoggedIn);
+                adminPanelBtnMobile.classList.toggle('hidden', !isAdmin); // Only show for admin
+                
+                document.body.classList.toggle('admin-view', isAdmin); // Only add class for admin
+                document.body.classList.toggle('disabled-view', !isLoggedIn); 
+            };
+
+            const handleLogout = async () => {
+                await supabaseClient.auth.signOut();
+                sessionStorage.removeItem('userRole');
+                updateUIAfterLogin(null);
+            };
+
+            const handleEditClick = (e) => {
+                e.stopPropagation();
+                const id = e.currentTarget.dataset.id;
+                const serviceToEdit = services.find(s => s.id == id);
+                if (serviceToEdit) {
+                    document.getElementById('edit-service-id').value = serviceToEdit.id;
+                    document.getElementById('edit-service-title').value = serviceToEdit.title;
+                    document.getElementById('edit-service-desc').value = serviceToEdit.description;
+                    document.getElementById('edit-service-icon').value = serviceToEdit.icon;
+                    document.getElementById('edit-service-url').value = serviceToEdit.url;
+                    document.getElementById('edit-service-color').value = serviceToEdit.color;
+                    editServiceModal.show();
+                }
+            };
+
+            const handleDeleteClick = (e) => {
+                e.stopPropagation();
+                serviceIdToDelete = e.currentTarget.dataset.id;
+                deleteConfirmModal.show();
+            };
+            
+            // --- API Calls to Google Sheet ---
+
+            const fetchServices = async () => {
+                if (SCRIPT_URL === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+                    alert('Harap masukkan URL Google Apps Script Anda di dalam kode HTML.');
+                    showLoading(false);
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                showLoading(true);
+                emptyState.classList.add('hidden');
+                try {
+                    const response = await fetch(SCRIPT_URL);
+                    services = await response.json();
+                } catch (error) {
+                    console.error('Error fetching services:', error);
+                    alert('Gagal memuat data dari Google Sheet. Periksa konsol untuk detail.');
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            const updateSheet = async (action, data) => {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action, data })
+                    });
+                    const result = await response.json();
+                    if(result.status === 'success') {
+                        await fetchServices();
+                        slideTransition(renderServices, 'next');
+                    } else {
+                        throw new Error(result.message || 'Unknown error from Apps Script');
+                    }
+                } catch (error) {
+                    console.error(`Error performing ${action}:`, error);
+                    alert(`Gagal melakukan operasi ${action}. Periksa konsol untuk detail.`);
+                }
+            };
+
+            // --- EVENT LISTENERS ---
+
+            serviceContainer.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            serviceContainer.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            window.addEventListener('scroll', () => {
+                let st = window.pageYOffset || document.documentElement.scrollTop;
+                if (st > lastScrollTop && st > 50) {
+                    bottomNav.classList.add('hidden-nav');
+                } else {
+                    bottomNav.classList.remove('hidden-nav');
+                }
+                lastScrollTop = st <= 0 ? 0 : st;
+            }, false);
+
+            searchInput.addEventListener('input', (e) => {
+                slideTransition(() => {
+                    searchTerm = e.target.value;
+                    currentPage = 1;
+                    renderServices();
+                }, 'next');
+            });
+
+            sortAzBtn.addEventListener('click', () => {
+                if (sortOrder === 'az') return;
+                slideTransition(() => {
+                    sortOrder = 'az';
+                    sortAzBtn.classList.add('active');
+                    sortZaBtn.classList.remove('active');
+                    currentPage = 1;
+                    renderServices();
+                }, 'next');
+            });
+
+            sortZaBtn.addEventListener('click', () => {
+                if (sortOrder === 'za') return;
+                slideTransition(() => {
+                    sortOrder = 'za';
+                    sortZaBtn.classList.add('active');
+                    sortAzBtn.classList.remove('active');
+                    currentPage = 1;
+                    renderServices();
+                }, 'next');
+            });
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const usernameInput = document.getElementById('username'); // Ini adalah email
+                const passwordInput = document.getElementById('password');
+                loginError.classList.add('hidden');
+            
+                // Login dengan Supabase
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: usernameInput.value,
+                    password: passwordInput.value,
+                });
+            
+                if (error) {
+                    console.error('Login Error:', error.message);
+                    loginError.textContent = 'Email atau password salah!';
+                    loginError.classList.remove('hidden');
+                    return;
+                }
+            
+                // Jika berhasil, ambil role dari tabel profiles
+                if (data.user) {
+                    const { data: profiles, error: profileError } = await supabaseClient
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', data.user.id);
+            
+                    if (profileError) {
+                        console.error('Profile Error:', profileError.message);
+                        loginError.textContent = 'Gagal memuat profil pengguna.';
+                        loginError.classList.remove('hidden');
+                        await supabaseClient.auth.signOut(); // Logout jika profil tidak ditemukan
+                        return;
+                    }
+
+                    const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+            
+                    if (profile) {
+                        // Simpan role di sessionStorage untuk menjaga konsistensi UI
+                        sessionStorage.setItem('userRole', profile.role);
+                        updateUIAfterLogin(profile.role);
+                        loginModal.hide();
+                        loginForm.reset();
+                    } else {
+                        console.error('Profile Error:', 'No profile found for this user.');
+                        loginError.textContent = 'Profil pengguna tidak ditemukan.';
+                        loginError.classList.remove('hidden');
+                        await supabaseClient.auth.signOut();
+                    }
+                }
+            });
+
+            logoutBtnDesktop.addEventListener('click', handleLogout);
+            logoutBtnMobile.addEventListener('click', handleLogout);
+            backToGridBtn.addEventListener('click', showGridView);
+            homeBtnMobile.addEventListener('click', (e) => {
+                e.preventDefault();
+                showGridView();
+            });
+            
+            gridViewBtn.addEventListener('click', () => setView('grid'));
+            listViewBtn.addEventListener('click', () => setView('list'));
+
+            addServiceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newService = {
+                    id: Date.now(),
+                    title: document.getElementById('add-service-title').value,
+                    description: document.getElementById('add-service-desc').value,
+                    icon: document.getElementById('add-service-icon').value,
+                    url: document.getElementById('add-service-url').value,
+                    color: document.getElementById('add-service-color').value
+                };
+
+                addServiceModal.hide();
+                await updateSheet('add', newService);
+                addServiceForm.reset();
+            });
+
+            editServiceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const updatedService = {
+                    id: Number(document.getElementById('edit-service-id').value),
+                    title: document.getElementById('edit-service-title').value,
+                    description: document.getElementById('edit-service-desc').value,
+                    icon: document.getElementById('edit-service-icon').value,
+                    url: document.getElementById('edit-service-url').value,
+                    color: document.getElementById('edit-service-color').value
+                };
+                editServiceModal.hide();
+                await updateSheet('update', updatedService);
+            });
+
+            confirmDeleteBtn.addEventListener('click', async () => {
+                deleteConfirmModal.hide();
+                await updateSheet('delete', { id: Number(serviceIdToDelete) });
+                serviceIdToDelete = null;
+            });
+
+            // --- INITIALIZATION ---
+            const initializeApp = async () => {
+                // Cek sesi pengguna saat aplikasi dimuat
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                let userRole = null;
+                if (session) {
+                    const { data: profiles, error } = await supabaseClient
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', session.user.id);
+                    
+                    if (error) {
+                        console.error("Error fetching profile on init:", error.message);
+                        userRole = null;
+                    } else {
+                        const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+                        userRole = profile ? profile.role : null;
+                    }
+                }
+                updateUIAfterLogin(userRole);
+
+                populateIconSelectors();
+                
+                await fetchServices();
+                setView('grid'); 
+                showGridView(); 
+            };
+
+            initializeApp();
+        });
+    </script>
+
+</body>
+</html>
+
